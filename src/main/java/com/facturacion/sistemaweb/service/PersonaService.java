@@ -1,8 +1,6 @@
 package com.facturacion.sistemaweb.service;
 
 import java.util.List;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -80,14 +78,10 @@ public class PersonaService {
 		persona.setCedulaPersona(form.getCedulaPersona().strip());
 		persona.setNombresPersona(form.getNombresPersona().strip());
 		persona.setApellidosPersona(form.getApellidosPersona().strip());
-		if (form.getFechaNacimientoPersona() == null) {
-			persona.setFechaNacimientoPersona(null);
-		} else {
-			LocalTime existingTime = persona.getFechaNacimientoPersona() == null
-					? LocalTime.MIDNIGHT
-					: persona.getFechaNacimientoPersona().toLocalTime();
-			persona.setFechaNacimientoPersona(LocalDateTime.of(form.getFechaNacimientoPersona(), existingTime));
-		}
+		var fecha = form.getFechaNacimientoPersona();
+		var hora = persona.getFechaNacimientoPersona() == null
+				? java.time.LocalTime.MIDNIGHT : persona.getFechaNacimientoPersona().toLocalTime();
+		persona.setFechaNacimientoPersona(fecha == null ? null : fecha.atTime(hora));
 	}
 
 	private void validarCedula(String cedula, Long idPersona) {

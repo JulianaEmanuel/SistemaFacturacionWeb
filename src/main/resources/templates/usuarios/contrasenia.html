@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/layout :: head('Cambiar contraseña | Sistema de Facturación Web')}"></head>
-<body><div class="app-shell"><aside th:replace="~{fragments/sidebar :: sidebar('usuarios')}"></aside><div class="app-main"><header th:replace="~{fragments/topbar :: topbar('Cambiar contraseña', 'ADMINISTRACIÓN')}"></header>
+<body class="dashboard-page management-page"><div class="app-shell"><aside th:replace="~{fragments/sidebar :: sidebar('usuarios')}"></aside><div class="app-main"><header th:replace="~{fragments/topbar :: topbar('Cambiar contraseña', 'ADMINISTRACIÓN')}"></header>
 <main class="content-area"><section class="page-intro"><h2>Cambiar contraseña</h2><p>Cuenta: <strong th:text="${#strings.trim(usuario.nombre)}"></strong></p></section>
 <section class="cliente-panel cliente-form-panel"><div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
 <form method="post" th:action="@{/modulos/usuarios/{id}/contrasenia(id=${usuario.id})}"><div class="cliente-form-grid">

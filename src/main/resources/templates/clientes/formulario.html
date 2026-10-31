@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(${modoEdicion} ? 'Editar cliente | Sistema de Facturación Web' : 'Registrar cliente | Sistema de Facturación Web')}"></head>
-<body>
+<body class="dashboard-page management-page">
 	<div class="app-shell">
 		<aside th:replace="~{fragments/sidebar :: sidebar('clientes')}"></aside>
 		<div class="app-main">
@@ -10,7 +10,7 @@
 				<section class="page-intro" aria-labelledby="form-title">
 					<p class="eyebrow">DATOS DE PERSONA</p>
 					<h2 id="form-title" th:text="${modoEdicion} ? 'Editar cliente' : 'Registrar cliente'">Registrar cliente</h2>
-					<p class="intro-copy">Los campos corresponden a las columnas existentes en dbo.Persona.</p>
+					<p class="intro-copy">Completa los datos de la persona. Los campos marcados con * son obligatorios.</p>
 				</section>
 				<section class="cliente-panel cliente-form-panel">
 					<form method="post" th:action="${formAction}" th:object="${personaForm}" novalidate>
@@ -24,7 +24,7 @@
 							<div class="mb-3">
 								<label class="form-label" for="fechaNacimientoPersona">Fecha de nacimiento</label>
 								<input id="fechaNacimientoPersona" class="form-control" type="date" th:field="*{fechaNacimientoPersona}">
-								<div class="field-hint">Campo opcional según la tabla dbo.Persona.</div>
+								<div class="field-hint">Puedes dejar este campo vacío.</div>
 							</div>
 							<div class="mb-3">
 								<label class="form-label" for="nombresPersona">Nombres <span class="required-mark">*</span></label>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Proveedores | Sistema de Facturación Web')}"></head>
-<body>
+<body class="dashboard-page management-page">
 	<div class="app-shell">
 		<aside th:replace="~{fragments/sidebar :: sidebar('proveedores')}"></aside>
 		<div class="app-main">
@@ -25,7 +25,7 @@
 						<a class="btn btn-success cliente-create" th:href="@{/modulos/proveedores/nuevo}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Registrar proveedor</a>
 					</div>
 					<div class="table-responsive">
-						<table class="table invoice-table cliente-table proveedor-table align-middle mb-0">
+						<table class="management-table table invoice-table cliente-table proveedor-table align-middle mb-0">
 							<colgroup><col class="proveedor-col-id"><col class="proveedor-col-cedula"><col class="proveedor-col-nombres"><col class="proveedor-col-apellidos"><col class="proveedor-col-email"><col class="proveedor-col-acciones"></colgroup>
 							<thead><tr><th scope="col">ID</th><th scope="col">Cédula</th><th scope="col">Nombres</th><th scope="col">Apellidos</th><th scope="col">Correo</th><th scope="col" class="text-end">Acciones</th></tr></thead>
 							<tbody>

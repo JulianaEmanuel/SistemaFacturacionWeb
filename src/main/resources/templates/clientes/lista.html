@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Clientes | Sistema de Facturación Web')}"></head>
-<body>
+<body class="dashboard-page management-page">
 	<div class="app-shell">
 		<aside th:replace="~{fragments/sidebar :: sidebar('clientes')}"></aside>
 		<div class="app-main">
@@ -25,7 +25,7 @@
 						<a class="btn btn-success cliente-create" th:href="@{/modulos/clientes/nuevo}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Registrar cliente</a>
 					</div>
 					<div class="table-responsive">
-						<table class="table invoice-table cliente-table align-middle mb-0">
+						<table class="management-table table invoice-table cliente-table align-middle mb-0">
 							<colgroup><col class="col-cedula"><col class="col-nombres"><col class="col-apellidos"><col class="col-fecha"><col class="col-acciones"></colgroup>
 							<thead><tr><th scope="col">Cédula</th><th scope="col">Nombres</th><th scope="col">Apellidos</th><th scope="col">Fecha de nacimiento</th><th scope="col" class="text-end">Acciones</th></tr></thead>
 							<tbody>

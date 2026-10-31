@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Empleados | Sistema de Facturación Web')}"></head>
-<body>
+<body class="dashboard-page management-page">
 <div class="app-shell">
     <aside th:replace="~{fragments/sidebar :: sidebar('empleados')}"></aside>
     <div class="app-main">
@@ -24,16 +24,16 @@
                     <a class="btn btn-success cliente-create" th:href="@{/modulos/empleados/nuevo}"><i class="bi bi-plus-lg" aria-hidden="true"></i> Registrar empleado</a>
                 </div>
                 <div class="table-responsive">
-                    <table class="table invoice-table align-middle mb-0">
+                    <table class="management-table table invoice-table align-middle mb-0">
                         <thead><tr><th scope="col">ID</th><th scope="col">Cédula</th><th scope="col">Nombres</th><th scope="col">Apellidos</th><th scope="col">Usuario</th><th scope="col" class="text-end">Acciones</th></tr></thead>
                         <tbody>
                         <tr th:each="empleado : ${empleados}">
-                            <td th:text="${empleado.idEmpleado}"></td>
-                            <td th:text="${#strings.trim(empleado.persona.cedulaPersona)}"></td>
-                            <td th:text="${#strings.trim(empleado.persona.nombresPersona)}"></td>
-                            <td th:text="${#strings.trim(empleado.persona.apellidosPersona)}"></td>
-                            <td th:text="${#strings.trim(empleado.usuario.nombreUsuario)}"></td>
-                            <td class="text-end cliente-actions">
+                            <td th:text="${empleado.idEmpleado}" data-label="ID"></td>
+                            <td th:text="${#strings.trim(empleado.persona.cedulaPersona)}" data-label="Cédula"></td>
+                            <td th:text="${#strings.trim(empleado.persona.nombresPersona)}" data-label="Nombres"></td>
+                            <td th:text="${#strings.trim(empleado.persona.apellidosPersona)}" data-label="Apellidos"></td>
+                            <td th:text="${#strings.trim(empleado.usuario.nombreUsuario)}" data-label="Usuario"></td>
+                            <td class="text-end cliente-actions" data-label="Acciones">
                                 <a class="btn btn-sm btn-outline-success" th:href="@{/modulos/empleados/{id}/editar(id=${empleado.idEmpleado})}"><i class="bi bi-pencil" aria-hidden="true"></i> Editar</a>
                                 <form class="d-inline" method="post" th:action="@{/modulos/empleados/{id}/eliminar(id=${empleado.idEmpleado})}" onsubmit="return confirm('¿Eliminar este empleado? Si tiene facturas no se podrá eliminar. Se conservarán la persona y el usuario asociados.')">
                                     <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash" aria-hidden="true"></i> Eliminar</button>

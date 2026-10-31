@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/layout :: head('Imprimir reporte | Sistema de Facturación Web')}"></head><body>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/layout :: head('Imprimir reporte | Sistema de Facturación Web')}"></head><body class="management-page print-page">
 <link rel="stylesheet" th:href="@{/css/reportes.css}">
 <main class="container-fluid py-4 reporte-impresion"><header><h1 class="h3">Sistema de Facturación Web</h1><h2 class="h4" th:text="${reporte.tipo.titulo}"></h2><p th:text="|${reporte.filtro.desde} a ${reporte.filtro.hasta} · ${reporte.alcance}|"></p><p class="small" th:text="${reporte.filtro.descripcion()}"></p></header>
 <button id="reporte-imprimir" class="btn btn-success mb-3 d-print-none" type="button">Imprimir</button>

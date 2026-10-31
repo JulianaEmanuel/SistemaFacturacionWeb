@@ -24,9 +24,15 @@ import com.facturacion.sistemaweb.security.*;
 import com.facturacion.sistemaweb.service.*;
 
 @WebMvcTest({AdministracionController.class,AccesoController.class,HomeController.class,ModuleController.class})
-@Import({SecurityConfig.class,ClaveSegura.class}) @ActiveProfiles("sqlserver")
+@Import({SecurityConfig.class,ClaveSegura.class,CapturaVistasConfig.class}) @ActiveProfiles("sqlserver")
 @org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc(print=org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint.NONE)
 class AdministracionSecurityTest {
+    @Test void listaDeTiposYPantallaDePermisosSeRenderizan() throws Exception {
+        var tipo=new TipoUsuario();tipo.setNombre("OPERADOR");tipo.setDescripcion("Operaciones del sistema");
+        when(service.tipos("")).thenReturn(List.of(tipo));
+        mvc.perform(get("/modulos/tipos-usuario").with(admin())).andExpect(status().isOk());
+        mvc.perform(get("/sin-permiso").with(operador())).andExpect(status().isForbidden()).andExpect(content().string(containsString("Acceso denegado")));
+    }
     @Autowired MockMvc mvc;
     @Autowired ClaveSegura claves;
     @MockitoBean AdministracionService service;

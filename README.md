@@ -25,6 +25,16 @@ ni modifica automáticamente las tablas.
 
 ## Desarrollo local
 
+En la computadora configurada, el arranque cotidiano requiere únicamente:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+Abre `http://localhost:8081/login`. La preparación única de Java 21 y el DLL
+utiliza archivos locales excluidos de Git; ver [ARRANQUE-LOCAL.md](ARRANQUE-LOCAL.md).
+Los comandos siguientes documentan la configuración manual alternativa.
+
 Configurar las variables en la misma terminal PowerShell que inicia Java:
 
 ```powershell
@@ -53,6 +63,8 @@ En producción conservar `encrypt=true`, la validación del certificado y una CA
 de confianza; no activar el perfil local.
 
 ## Documentación
+
+- [Rediseño completo y listado de todas las vistas](REDISENO-COMPLETO.md)
 
 - [Seguridad y primera cuenta administradora](SEGURIDAD-USUARIOS.md)
 - [Recuperación local del administrador](RECUPERACION-ADMIN.md)

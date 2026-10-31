@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(${modoEdicion} ? 'Editar producto | Sistema de Facturación Web' : 'Registrar producto | Sistema de Facturación Web')}"></head>
-<body>
+<body class="dashboard-page management-page">
 	<div class="app-shell">
 		<aside th:replace="~{fragments/sidebar :: sidebar('productos')}"></aside>
 		<div class="app-main">
@@ -10,7 +10,7 @@
 				<section class="page-intro" aria-labelledby="producto-form-title">
 					<p class="eyebrow">CATÁLOGO</p>
 					<h2 id="producto-form-title" th:text="${modoEdicion} ? 'Editar producto' : 'Registrar producto'">Registrar producto</h2>
-					<p class="intro-copy">Completa los datos según la estructura existente en dbo.Producto.</p>
+					<p class="intro-copy">Completa la información del catálogo, su proveedor y sus tarifas.</p>
 				</section>
 				<section class="cliente-panel cliente-form-panel">
 					<div th:if="${#lists.isEmpty(proveedores)}" class="alert alert-warning" role="status">No hay proveedores registrados. Registra un proveedor antes de guardar productos.</div>

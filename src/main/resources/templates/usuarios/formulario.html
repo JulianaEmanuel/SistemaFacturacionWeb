@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/layout :: head('Usuario | Sistema de Facturación Web')}"></head>
-<body><div class="app-shell"><aside th:replace="~{fragments/sidebar :: sidebar('usuarios')}"></aside><div class="app-main"><header th:replace="~{fragments/topbar :: topbar('Usuario', 'ADMINISTRACIÓN')}"></header>
+<body class="dashboard-page management-page"><div class="app-shell"><aside th:replace="~{fragments/sidebar :: sidebar('usuarios')}"></aside><div class="app-main"><header th:replace="~{fragments/topbar :: topbar('Usuario', 'ADMINISTRACIÓN')}"></header>
 <main class="content-area"><section class="page-intro"><h2 th:text="${modoEdicion} ? 'Editar usuario' : 'Registrar usuario'"></h2><p th:if="${modoEdicion}">El estado y la contraseña se cambian desde sus acciones independientes.</p></section>
 <section class="cliente-panel cliente-form-panel"><div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div><div th:if="${#lists.isEmpty(tipos)}" class="alert alert-warning">Registra primero un tipo de usuario.</div>
 <form method="post" th:action="${formAction}" th:object="${usuarioForm}" novalidate><div class="cliente-form-grid">

@@ -34,7 +34,7 @@ import com.facturacion.sistemaweb.service.ProductoRelacionadoException;
 @WebMvcTest(controllers = ProductoController.class)
 @ActiveProfiles("sqlserver")
 @org.springframework.security.test.context.support.WithMockUser
-@org.springframework.context.annotation.Import(com.facturacion.sistemaweb.security.SecurityConfig.class)
+@org.springframework.context.annotation.Import({com.facturacion.sistemaweb.security.SecurityConfig.class,CapturaVistasConfig.class})
 class ProductoControllerIntegrationTest {
     @org.springframework.test.context.bean.override.mockito.MockitoBean org.springframework.security.core.userdetails.UserDetailsService autenticacionSimulada;
 

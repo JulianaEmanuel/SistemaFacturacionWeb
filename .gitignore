@@ -50,3 +50,6 @@ build/
 /.agents/
 /.aws/
 /.github/modernize/
+/.mvn/local-java.cmd
+/.mvn/maven.config
+/data/perfiles/

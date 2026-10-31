@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/layout :: head('Tipo de usuario | Sistema de Facturación Web')}"></head>
-<body><div class="app-shell"><aside th:replace="~{fragments/sidebar :: sidebar('tipos-usuario')}"></aside><div class="app-main"><header th:replace="~{fragments/topbar :: topbar('Tipo de usuario', 'ADMINISTRACIÓN')}"></header>
+<body class="dashboard-page management-page"><div class="app-shell"><aside th:replace="~{fragments/sidebar :: sidebar('tipos-usuario')}"></aside><div class="app-main"><header th:replace="~{fragments/topbar :: topbar('Tipo de usuario', 'ADMINISTRACIÓN')}"></header>
 <main class="content-area"><section class="page-intro"><h2 th:text="${modoEdicion} ? 'Editar tipo de usuario' : 'Registrar tipo de usuario'"></h2></section>
 <section class="cliente-panel cliente-form-panel"><div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
 <form method="post" th:action="${formAction}" th:object="${tipoUsuarioForm}" novalidate><div class="cliente-form-grid">

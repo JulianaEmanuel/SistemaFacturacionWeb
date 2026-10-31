@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(${modoEdicion} ? 'Editar proveedor | Sistema de Facturación Web' : 'Registrar proveedor | Sistema de Facturación Web')}"></head>
-<body>
+<body class="dashboard-page management-page">
 	<div class="app-shell">
 		<aside th:replace="~{fragments/sidebar :: sidebar('proveedores')}"></aside>
 		<div class="app-main">

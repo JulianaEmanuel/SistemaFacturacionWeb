@@ -19,9 +19,15 @@ import com.facturacion.sistemaweb.model.*;
 import com.facturacion.sistemaweb.security.SecurityConfig;
 import com.facturacion.sistemaweb.service.*;
 
-@WebMvcTest(ReporteController.class) @ActiveProfiles("sqlserver") @Import(SecurityConfig.class)
+@WebMvcTest(ReporteController.class) @ActiveProfiles("sqlserver") @Import({SecurityConfig.class,CapturaVistasConfig.class})
 @AutoConfigureMockMvc(print=MockMvcPrint.NONE)
 class ReporteControllerTest {
+    @Test void graficoSeRenderizaConImportesDelResultadoAutorizado() throws Exception {
+        var base=ReporteExportTest.resultado(ReporteTipo.VENTAS,List.of(ReporteExportTest.fila("2026-10-30","30 octubre","","4.6000")));
+        var data=new ReporteResultado(base.tipo(),base.filtro(),base.alcance(),base.administrador(),base.resumen(),base.filas(),List.of(new ReporteResultado.Punto("30 octubre",new java.math.BigDecimal("4.6000"))),"line",false);
+        when(reportes.consultar(any(),any())).thenReturn(data);
+        mvc.perform(get("/modulos/reportes/ventas").with(user("ana"))).andExpect(status().isOk()).andExpect(content().string(containsString("data-total=\"4.6000\"")));
+    }
     @Autowired MockMvc mvc;
     @MockitoBean ReporteService reportes;
     @MockitoBean ReportePdfService pdf;

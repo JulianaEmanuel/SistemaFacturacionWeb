@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Productos | Sistema de Facturación Web')}"></head>
-<body>
+<body class="dashboard-page management-page">
 	<div class="app-shell">
 		<aside th:replace="~{fragments/sidebar :: sidebar('productos')}"></aside>
 		<div class="app-main">
@@ -27,7 +27,7 @@
 					</div>
 					<div th:unless="${hayProveedores}" class="alert alert-warning mx-3" role="status">No hay proveedores registrados. El registro de productos estará disponible cuando exista un proveedor.</div>
 					<div class="table-responsive">
-						<table class="table invoice-table cliente-table producto-table align-middle mb-0">
+						<table class="management-table table invoice-table cliente-table producto-table align-middle mb-0">
 							<colgroup><col class="producto-col-id"><col class="producto-col-proveedor"><col class="producto-col-nombre"><col class="producto-col-precio"><col class="producto-col-iva"><col class="producto-col-acciones"></colgroup>
 							<thead><tr><th scope="col">ID</th><th scope="col">Proveedor</th><th scope="col">Nombre</th><th scope="col" class="text-end">Precio unitario</th><th scope="col" class="text-end">IVA</th><th scope="col" class="text-end">Acciones</th></tr></thead>
 							<tbody>

@@ -21,8 +21,8 @@
 				<a class="sidebar-link" th:classappend="${activePage == 'proveedores'} ? ' is-active' : ''" th:href="@{/modulos/proveedores}"><i class="bi bi-truck" aria-hidden="true"></i><span>Proveedores</span></a>
 				<a class="sidebar-link" th:classappend="${activePage == 'empleados'} ? ' is-active' : ''" th:href="@{/modulos/empleados}"><i class="bi bi-person-workspace" aria-hidden="true"></i><span>Empleados</span></a>
 				<a class="sidebar-link" th:classappend="${activePage == 'facturas'} ? ' is-active' : ''" th:href="@{/modulos/facturas}"><i class="bi bi-file-earmark-text" aria-hidden="true"></i><span>Facturas</span></a>
-				<a class="sidebar-link" th:classappend="${activePage == 'usuarios'} ? ' is-active' : ''" th:href="@{/modulos/usuarios}"><i class="bi bi-person-gear" aria-hidden="true"></i><span>Usuarios</span></a>
-				<a class="sidebar-link" th:classappend="${activePage == 'tipos-usuario'} ? ' is-active' : ''" th:href="@{/modulos/tipos-usuario}"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>Tipos de usuario</span></a>
+				<a th:if="${administracionDisponible}" class="sidebar-link" th:classappend="${activePage == 'usuarios'} ? ' is-active' : ''" th:href="@{/modulos/usuarios}"><i class="bi bi-person-gear" aria-hidden="true"></i><span>Usuarios</span></a>
+				<a th:if="${administracionDisponible}" class="sidebar-link sidebar-sublink" th:classappend="${activePage == 'tipos-usuario'} ? ' is-active' : ''" th:href="@{/modulos/tipos-usuario}"><i class="bi bi-shield-lock" aria-hidden="true"></i><span>Tipos de usuario</span></a>
 				<a class="sidebar-link" th:classappend="${activePage == 'reportes'} ? ' is-active' : ''" th:href="@{/modulos/reportes}"><i class="bi bi-bar-chart-line" aria-hidden="true"></i><span>Reportes</span></a>
 			</nav>
 			<div class="sidebar-footer">

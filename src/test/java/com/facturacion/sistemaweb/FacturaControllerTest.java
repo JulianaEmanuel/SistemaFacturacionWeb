@@ -23,7 +23,7 @@ import com.facturacion.sistemaweb.security.SecurityConfig;
 import com.facturacion.sistemaweb.service.*;
 
 @WebMvcTest(FacturaController.class) @ActiveProfiles("sqlserver")
-@Import({SecurityConfig.class,FacturaEnvios.class}) @AutoConfigureMockMvc(print=MockMvcPrint.NONE)
+@Import({SecurityConfig.class,FacturaEnvios.class,CapturaVistasConfig.class}) @AutoConfigureMockMvc(print=MockMvcPrint.NONE)
 class FacturaControllerTest {
     @Autowired MockMvc mvc;
     @MockitoBean FacturaService service;

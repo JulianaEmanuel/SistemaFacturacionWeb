@@ -20,6 +20,7 @@ import com.facturacion.sistemaweb.repository.PersonaRepository;
 @AutoConfigureMockMvc
 @ActiveProfiles("sqlserver")
 @org.springframework.security.test.context.support.WithMockUser(authorities={"USER","ACCOUNT_ID_1"})
+@org.springframework.context.annotation.Import(CapturaVistasConfig.class)
 class ClienteControllerIntegrationTest {
     @org.springframework.test.context.bean.override.mockito.MockitoBean
     com.facturacion.sistemaweb.repository.AdministracionRepository sesiones;

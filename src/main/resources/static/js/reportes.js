@@ -13,8 +13,9 @@
     new window.Chart(canvas, {
         type: canvas.dataset.tipo === "line" ? "line" : "bar",
         data: { labels: points.map(p => p.dataset.etiqueta), datasets: [{ label: "Total facturado", data: values,
-            borderColor: "#15856a", backgroundColor: horizontal ? "#15856a" : "rgba(21, 133, 106, .22)", borderWidth: 2, tension: .2 }] },
+            borderColor: "#6862d9", backgroundColor: horizontal ? "#6862d9" : "rgba(104, 98, 217, .18)", borderWidth: 2, tension: .2 }] },
         options: { responsive: true, maintainAspectRatio: false, indexAxis: horizontal ? "y" : "x",
+            animation: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? false : { duration: 350 },
             plugins: { legend: { display: false } }, scales: horizontal ? { x: { beginAtZero: true } } : { y: { beginAtZero: true } } }
     });
 })();

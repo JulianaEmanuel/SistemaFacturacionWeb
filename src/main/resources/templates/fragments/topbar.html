@@ -3,7 +3,7 @@
 <body>
 	<header th:fragment="topbar(pageTitle, sectionName)" class="topbar">
 		<div class="topbar-heading">
-			<button class="sidebar-toggle btn-icon d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar" aria-label="Abrir menú">
+			<button class="sidebar-toggle btn-icon d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar" aria-expanded="false" aria-label="Abrir menú">
 				<i class="bi bi-list" aria-hidden="true"></i>
 			</button>
 			<div>
@@ -16,10 +16,10 @@
 				<i class="bi bi-calendar3" aria-hidden="true"></i>
 				<time id="current-date">Fecha actual</time>
 			</div>
-			<div class="topbar-user" aria-label="Estado de autenticación">
-				<span class="user-avatar"><i class="bi bi-person" aria-hidden="true"></i></span>
-				<span class="user-copy"><strong th:text="${cuentaActual}">Cuenta</strong><small>Sesión iniciada</small></span>
-			</div>
+			<a class="topbar-user profile-link" th:href="@{/perfil}" aria-label="Mi perfil: cambiar foto">
+				<span class="user-avatar"><img th:src="@{/perfil/foto}" alt="" width="36" height="36"></span>
+				<span class="user-copy"><strong th:text="${cuentaActual}" th:title="${cuentaActual}">Cuenta</strong><small>Mi perfil · Cambiar foto</small></span>
+			</a>
 			<form method="post" th:action="@{/logout}"><button class="btn btn-outline-success btn-sm" type="submit">Cerrar sesión</button></form>
 		</div>
 	</header>

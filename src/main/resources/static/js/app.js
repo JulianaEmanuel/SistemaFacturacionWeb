@@ -1,5 +1,22 @@
 const currentDate = document.getElementById("current-date");
 
+// Un solo comportamiento de navegación para todas las pantallas.
+const appSidebar = document.getElementById("appSidebar");
+if (appSidebar) {
+	const closeSidebar = () => {
+		if (window.bootstrap?.Offcanvas) window.bootstrap.Offcanvas.getOrCreateInstance(appSidebar).hide();
+		else appSidebar.classList.remove("show");
+	};
+	appSidebar.querySelectorAll('[data-bs-dismiss="offcanvas"]').forEach(button => button.addEventListener("click", closeSidebar));
+	appSidebar.querySelectorAll("nav a").forEach(link => link.addEventListener("click", () => {
+		if (window.matchMedia("(max-width: 991.98px)").matches) closeSidebar();
+	}));
+	document.querySelectorAll('[data-bs-target="#appSidebar"][data-bs-toggle="offcanvas"]').forEach(button => {
+		appSidebar.addEventListener("shown.bs.offcanvas", () => button.setAttribute("aria-expanded", "true"));
+		appSidebar.addEventListener("hidden.bs.offcanvas", () => button.setAttribute("aria-expanded", "false"));
+	});
+}
+
 if (currentDate) {
 	currentDate.textContent = new Intl.DateTimeFormat("es", {
 		weekday: "long",
@@ -7,44 +24,4 @@ if (currentDate) {
 		month: "long",
 		year: "numeric"
 	}).format(new Date());
-}
-
-const monthlySalesCanvas = document.getElementById("monthlySalesChart");
-
-if (monthlySalesCanvas && window.Chart) {
-	new Chart(monthlySalesCanvas, {
-		type: "line",
-		data: {
-			labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-			datasets: [{
-				data: Array(12).fill(null),
-				borderColor: "#15856a",
-				backgroundColor: "rgb(21 133 106 / 12%)",
-				borderWidth: 2,
-				pointRadius: 0,
-				tension: 0.35,
-				fill: true
-			}]
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			plugins: {
-				legend: { display: false },
-				tooltip: { enabled: false }
-			},
-			scales: {
-				x: {
-					grid: { display: false },
-					border: { display: false },
-					ticks: { color: "#788780", font: { family: "DM Sans", size: 10 } }
-				},
-				y: {
-					display: false,
-					min: 0,
-					max: 1
-				}
-			}
-		}
-	});
 }

@@ -85,6 +85,48 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<!-- Activación voluntaria mediante .mvn/maven.config local (excluido de Git). -->
+		<profile>
+			<id>desarrollo-local</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<configuration>
+							<profiles>
+								<profile>sqlserver</profile>
+								<profile>local</profile>
+							</profiles>
+							<jvmArguments>-Djava.library.path="${local.sqlserver.auth-path}"</jvmArguments>
+							<systemPropertyVariables>
+								<server.port>8081</server.port>
+								<server.address>127.0.0.1</server.address>
+								<DB_SERVER>127.0.0.1</DB_SERVER>
+								<DB_PORT>1433</DB_PORT>
+								<DB_NAME>SistemaFacturacionWeb</DB_NAME>
+								<DB_TRUST_SERVER_CERTIFICATE>true</DB_TRUST_SERVER_CERTIFICATE>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<argLine>-Djava.library.path="${local.sqlserver.auth-path}"</argLine>
+							<systemPropertyVariables>
+								<spring.profiles.active>sqlserver</spring.profiles.active>
+								<spring.profiles.include>local</spring.profiles.include>
+								<DB_TRUST_SERVER_CERTIFICATE>true</DB_TRUST_SERVER_CERTIFICATE>
+							</systemPropertyVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<build>
 		<plugins>
 			<plugin>

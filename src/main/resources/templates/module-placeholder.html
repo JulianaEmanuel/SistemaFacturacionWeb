@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('${moduleName} | Sistema de Facturación Web')}"></head>
-<body>
+<head th:replace="~{fragments/layout :: head(${moduleName} + ' | Sistema de Facturación Web')}"></head>
+<body class="dashboard-page management-page">
 	<div class="app-shell">
 		<aside th:replace="~{fragments/sidebar :: sidebar(${activePage})}"></aside>
 		<div class="app-main">
