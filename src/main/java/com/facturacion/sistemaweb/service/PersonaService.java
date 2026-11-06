@@ -19,38 +19,44 @@ public class PersonaService {
 
 	private final PersonaRepository personaRepository;
 
-	public PersonaService(PersonaRepository personaRepository) {
+	private final com.facturacion.sistemaweb.repository.PersonaContactosRepository contactos;
+    public PersonaService(PersonaRepository personaRepository,com.facturacion.sistemaweb.repository.PersonaContactosRepository contactos) {
+        this.contactos=contactos;
 		this.personaRepository = personaRepository;
 	}
 
 	@Transactional(readOnly = true)
 	public List<Persona> listar(String filtro) {
 		if (filtro == null || filtro.isBlank()) {
-			return personaRepository.listarOrdenadas();
+			var lista=personaRepository.listarOrdenadas();contactos.cargar(lista);return lista;
 		}
-		return personaRepository.buscar(filtro.strip());
+		var lista=personaRepository.buscar(filtro.strip());contactos.cargar(lista);return lista;
 	}
 
 	@Transactional(readOnly = true)
 	public Persona buscarPorId(Long idPersona) {
-		return personaRepository.findById(idPersona)
+		var persona=personaRepository.findById(idPersona)
 				.orElseThrow(() -> new java.util.NoSuchElementException("No se encontró la persona solicitada."));
+        contactos.cargar(persona);return persona;
 	}
 
 	@Transactional(isolation = Isolation.SERIALIZABLE)
 	public Persona registrar(PersonaForm form) {
 		validarCedula(form.getCedulaPersona(), null);
-		Persona persona = new Persona();
+		validarContacto(form,true);contactos.exigirDisponible();
+        Persona persona = new Persona();
 		aplicarFormulario(persona, form);
-		return personaRepository.save(persona);
+        var guardada=personaRepository.saveAndFlush(persona);contactos.guardar(guardada.getIdPersona(),form);return guardada;
 	}
 
 	@Transactional(isolation = Isolation.SERIALIZABLE)
 	public Persona actualizar(Long idPersona, PersonaForm form) {
 		Persona persona = buscarPorId(idPersona);
 		validarCedula(form.getCedulaPersona(), idPersona);
-		aplicarFormulario(persona, form);
-		return personaRepository.save(persona);
+		validarContacto(form,false);
+        if(!contactos.disponible() && (form.getDireccionPersona()!=null || form.getCorreoPersona()!=null || form.getTelefonoPersona()!=null)) contactos.exigirDisponible();
+        aplicarFormulario(persona, form);var guardada=personaRepository.save(persona);
+        if(contactos.disponible()) contactos.guardar(guardada.getIdPersona(),form);return guardada;
 	}
 
 	@Transactional(isolation = Isolation.SERIALIZABLE)
@@ -74,6 +80,13 @@ public class PersonaService {
 		}
 	}
 
+    public boolean contactosDisponibles(){return contactos.disponible();}
+    private void validarContacto(PersonaForm form,boolean nuevo) {
+        try(var factory=jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+            var errores=factory.getValidator().validate(form,nuevo?PersonaForm.Nuevo.class:jakarta.validation.groups.Default.class);
+            if(!errores.isEmpty()) throw new jakarta.validation.ConstraintViolationException(errores);
+        }
+    }
 	private void aplicarFormulario(Persona persona, PersonaForm form) {
 		persona.setCedulaPersona(form.getCedulaPersona().strip());
 		persona.setNombresPersona(form.getNombresPersona().strip());

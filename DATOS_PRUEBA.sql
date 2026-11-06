@@ -1,5 +1,8 @@
 ﻿/*
  DATOS_PRUEBA.sql - SistemaFacturacionWeb - lote SFW_DEMO_V1
+ Version etapa 1: requiere migraciones 001_contacto_persona.sql, 002_formas_pago.sql y 003_factura_cliente.sql.
+ NO ejecuta migraciones. No completa contactos/pagos/copias de registros preexistentes.
+ Solo las personas nuevas reciben contactos ficticios y las facturas nuevas pago EFECTIVO/copia.
  Esquema real consultado: 30/10/2026. SQL Server / SSMS. Archivo UTF-8.
  NO SE HA EJECUTADO. Predeterminado: SOLO VISTA PREVIA, sin INSERT de tablas reales.
 
@@ -32,6 +35,8 @@ SET NOCOUNT ON;
 SET XACT_ABORT ON;
 IF DB_NAME()<>N'SistemaFacturacionWeb' THROW 51000,N'Base incorrecta.',1;
 IF @@TRANCOUNT<>0 THROW 51000,N'Cerrar o revertir la transaccion previa antes de ejecutar.',1;
+IF OBJECT_ID('dbo.FormaPago','U') IS NULL OR OBJECT_ID('dbo.FacturaPago','U') IS NULL OR OBJECT_ID('dbo.FacturaCliente','U') IS NULL
+ THROW 51000,N'Aplicar primero las migraciones 001, 002 y 003 de la etapa 1, solo con autorizacion.',1;
 DECLARE @Fase tinyint=1; -- 1: catalogos. 2: completar empleados y facturas.
 DECLARE @Aplicar bit=1;  -- 0: vista previa SIN escrituras. 1: aplicar, verificar y confirmar.
 DECLARE @TipoAdministrativo nvarchar(50)=N'ADMINISTRADOR'; -- mismo nombre reservado de la aplicacion
@@ -40,6 +45,9 @@ IF @Fase NOT IN(1,2) THROW 51000,N'Fase no valida.',1;
 -- Metadatos esperados; NO son nuevas tablas de la base (solo variables del lote).
 DECLARE @Esquema TABLE(Tabla sysname,Columna sysname,Tipo sysname,Bytes smallint,Precision tinyint,Escala tinyint,Nulo bit,Identidad bit,PRIMARY KEY(Tabla,Columna));
 INSERT @Esquema VALUES
+('Persona','DIRECCION_PERSONA','nvarchar',500,0,0,1,0),
+('Persona','TELEFONO_PERSONA','varchar',25,0,0,1,0),
+('Persona','CORREO_PERSONA','varchar',254,0,0,1,0),
 ('Persona','ID_PERSONA','bigint',8,19,0,0,1),
 ('Persona','CEDULA_PERSONA','char',13,0,0,0,0),
 ('Persona','NOMBRES_PERSONA','char',100,0,0,0,0),
@@ -88,7 +96,7 @@ IF EXISTS (
        OR c.is_computed=1 OR c.default_object_id<>0
 ) OR (SELECT COUNT(*) FROM sys.columns c JOIN sys.tables t ON t.object_id=c.object_id
       WHERE SCHEMA_NAME(t.schema_id)='dbo' AND t.name IN(SELECT DISTINCT Tabla FROM @Esquema))<>(SELECT COUNT(*) FROM @Esquema)
-    THROW 51001,N'El esquema cambio respecto a las 38 columnas verificadas. Revisar antes de insertar.',1;
+    THROW 51001,N'El esquema cambio respecto a las 41 columnas verificadas. Revisar antes de insertar.',1;
 DECLARE @FK TABLE(Tabla sysname,Columna sysname,Referencia sysname,Destino sysname);
 IF EXISTS(SELECT 1 FROM @Esquema e WHERE e.Identidad=1 AND NOT EXISTS(
  SELECT 1 FROM sys.indexes i JOIN sys.index_columns k ON k.object_id=i.object_id AND k.index_id=i.index_id
@@ -278,7 +286,7 @@ BEGIN TRY
         OR c.is_computed=1 OR c.default_object_id<>0
  ) OR (SELECT COUNT(*) FROM sys.columns c JOIN sys.tables t ON t.object_id=c.object_id
        WHERE SCHEMA_NAME(t.schema_id)='dbo' AND t.name IN(SELECT DISTINCT Tabla FROM @Esquema))<>(SELECT COUNT(*) FROM @Esquema)
-     THROW 51001,N'El esquema cambio respecto a las 38 columnas verificadas. Revisar antes de insertar.',1;
+     THROW 51001,N'El esquema cambio respecto a las 41 columnas verificadas. Revisar antes de insertar.',1;
  IF EXISTS(SELECT 1 FROM sys.triggers WHERE OBJECT_SCHEMA_NAME(parent_id)='dbo' AND OBJECT_NAME(parent_id) IN(SELECT DISTINCT Tabla FROM @Esquema) AND is_disabled=0)
   THROW 51004,N'Hay triggers activos; se cancela el lote.',1;
 
@@ -301,8 +309,8 @@ BEGIN TRY
  INSERT dbo.TipoUsuario(TIPO_USUARIO,DESCRIPCION) SELECT s.Nombre,s.Descripcion FROM @Tipos s WHERE NOT EXISTS(SELECT 1 FROM dbo.TipoUsuario t WHERE t.TIPO_USUARIO=s.Nombre);
  INSERT @Cambios VALUES('TipoUsuario',@@ROWCOUNT);
  INSERT @MT SELECT s.Numero,t.ID_TIPO_USUARIO FROM @Tipos s JOIN dbo.TipoUsuario t ON t.TIPO_USUARIO=s.Nombre;
- INSERT dbo.Persona(CEDULA_PERSONA,NOMBRES_PERSONA,APELLIDOS_PERSONA,FECHA_NACIMIENTO_PERSONA)
-  SELECT s.Cedula,s.Nombres,s.Apellidos,s.Nacimiento FROM @Personas s WHERE NOT EXISTS(SELECT 1 FROM dbo.Persona p WHERE LTRIM(RTRIM(p.CEDULA_PERSONA))=s.Cedula);
+ INSERT dbo.Persona(CEDULA_PERSONA,NOMBRES_PERSONA,APELLIDOS_PERSONA,FECHA_NACIMIENTO_PERSONA,DIRECCION_PERSONA,TELEFONO_PERSONA,CORREO_PERSONA)
+  SELECT s.Cedula,s.Nombres,s.Apellidos,s.Nacimiento,CONCAT(N'Av. Demostracion ',s.Numero,N', sector ficticio'),NULL,CONCAT('sfw.demo.persona',s.Numero,'@example.invalid') FROM @Personas s WHERE NOT EXISTS(SELECT 1 FROM dbo.Persona p WHERE LTRIM(RTRIM(p.CEDULA_PERSONA))=s.Cedula);
  INSERT @Cambios VALUES('Persona',@@ROWCOUNT);
  INSERT @MP SELECT s.Numero,p.ID_PERSONA FROM @Personas s JOIN dbo.Persona p ON LTRIM(RTRIM(p.CEDULA_PERSONA))=s.Cedula;
  IF (SELECT COUNT(*) FROM @MP)<>30 OR (SELECT COUNT(*) FROM @MT)<>10 THROW 51011,N'Mapas de personas o tipos incompletos.',1;
@@ -330,6 +338,9 @@ BEGIN TRY
 
  IF @Fase=2
  BEGIN
+  DECLARE @FormaDemo int;
+  SELECT @FormaDemo=ID_FORMA_PAGO FROM dbo.FormaPago WHERE CODIGO='EFECTIVO' AND ACTIVA=1;
+  IF @FormaDemo IS NULL THROW 51016,N'El catalogo debe contener EFECTIVO activo. No se crean formas de pago desde este lote.',1;
   -- Solo cuentas DEMO creadas previamente desde la aplicacion. Sin lectura de secretos.
   IF EXISTS(SELECT t.Usuario FROM @Tipos t JOIN dbo.Usuario u ON u.NOMBRE_USUARIO=t.Usuario GROUP BY t.Usuario HAVING COUNT(*)<>1)
    THROW 51015,N'Hay nombres de cuentas demo duplicados; no se modifican usuarios.',1;
@@ -357,6 +368,18 @@ BEGIN TRY
   INSERT dbo.Detallefactura(ID_FACTURA,ID_PRODUCTO,PRECIO_UNITARIO_DETALLE,SUBTOTAL_DETALLE,TOTAL_DETALLE,IVA_DETALLE,CANTIDAD)
    SELECT f.ID,p.ID,l.Precio,l.Subtotal,l.Total,l.IVA,l.Cantidad FROM @Lineas l JOIN @MF f ON f.Numero=l.Factura JOIN @NuevasFacturas n ON n.ID=f.ID JOIN @MProd p ON p.Numero=l.Producto;
   INSERT @Cambios VALUES('Detallefactura',@@ROWCOUNT);
+  -- Solo facturas creadas AHORA. Nunca se completan pagos/copias de facturas previas.
+  INSERT dbo.FacturaPago(ID_FACTURA,ID_FORMA_PAGO,NOMBRE_FORMA_PAGO,IMPORTE)
+  SELECT f.ID_FACTURA,@FormaDemo,p.NOMBRE,f.TOTAL_FACTURA FROM @NuevasFacturas n JOIN dbo.Factura f ON f.ID_FACTURA=n.ID JOIN dbo.FormaPago p ON p.ID_FORMA_PAGO=@FormaDemo;
+  INSERT @Cambios VALUES('FacturaPago',@@ROWCOUNT);
+  INSERT dbo.FacturaCliente(ID_FACTURA,IDENTIFICACION,NOMBRES,APELLIDOS,DIRECCION,TELEFONO,CORREO)
+  SELECT f.ID_FACTURA,RTRIM(p.CEDULA_PERSONA),RTRIM(p.NOMBRES_PERSONA),RTRIM(p.APELLIDOS_PERSONA),p.DIRECCION_PERSONA,p.TELEFONO_PERSONA,p.CORREO_PERSONA
+  FROM @NuevasFacturas n JOIN dbo.Factura f ON f.ID_FACTURA=n.ID JOIN dbo.Persona p ON p.ID_PERSONA=f.ID_PERSONA;
+  INSERT @Cambios VALUES('FacturaCliente',@@ROWCOUNT);
+  IF (SELECT COUNT(*) FROM dbo.FacturaPago p JOIN @NuevasFacturas n ON n.ID=p.ID_FACTURA)<>(SELECT COUNT(*) FROM @NuevasFacturas)
+   OR (SELECT COUNT(*) FROM dbo.FacturaCliente c JOIN @NuevasFacturas n ON n.ID=c.ID_FACTURA)<>(SELECT COUNT(*) FROM @NuevasFacturas)
+   OR EXISTS(SELECT 1 FROM dbo.FacturaPago p JOIN @NuevasFacturas n ON n.ID=p.ID_FACTURA JOIN dbo.Factura f ON f.ID_FACTURA=n.ID WHERE p.IMPORTE<>f.TOTAL_FACTURA)
+   THROW 51023,N'Pago o copia incompletos; se revierte el lote.',1;
 
   -- Una factura preexistente nunca se repara ni se completan sus detalles.
   IF (SELECT COUNT(*) FROM @MF)<>10 OR (SELECT COUNT(*) FROM dbo.Detallefactura d JOIN @MF f ON f.ID=d.ID_FACTURA)<>20

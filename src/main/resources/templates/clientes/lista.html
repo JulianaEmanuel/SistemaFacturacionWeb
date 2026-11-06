@@ -27,21 +27,21 @@
 					<div class="table-responsive">
 						<table class="management-table table invoice-table cliente-table align-middle mb-0">
 							<colgroup><col class="col-cedula"><col class="col-nombres"><col class="col-apellidos"><col class="col-fecha"><col class="col-acciones"></colgroup>
-							<thead><tr><th scope="col">Cédula</th><th scope="col">Nombres</th><th scope="col">Apellidos</th><th scope="col">Fecha de nacimiento</th><th scope="col" class="text-end">Acciones</th></tr></thead>
+							<thead><tr><th scope="col">Cédula</th><th scope="col">Nombres</th><th scope="col">Apellidos</th><th scope="col">Fecha de nacimiento</th><th scope="col">Contacto</th><th scope="col" class="text-end">Acciones</th></tr></thead>
 							<tbody>
 								<tr th:each="cliente : ${clientes}">
 									<td data-label="Cédula" th:text="${#strings.trim(cliente.cedulaPersona)}"></td>
 									<td data-label="Nombres" th:text="${#strings.trim(cliente.nombresPersona)}"></td>
 									<td data-label="Apellidos" th:text="${#strings.trim(cliente.apellidosPersona)}"></td>
 									<td data-label="Fecha de nacimiento" th:text="${cliente.fechaNacimientoPersona == null ? '-' : #temporals.format(cliente.fechaNacimientoPersona, 'dd/MM/yyyy')}"></td>
-									<td data-label="Acciones" class="text-end cliente-actions">
+									<td data-label="Contacto"><div th:text="${cliente.direccionPersona ?: '—'}"></div><div th:text="${cliente.correoPersona ?: '—'}"></div><small th:text="${cliente.telefonoPersona ?: ''}"></small></td><td data-label="Acciones" class="text-end cliente-actions">
 										<a class="btn btn-sm btn-outline-success" th:href="@{/modulos/clientes/{id}/editar(id=${cliente.idPersona})}" th:aria-label="|Editar ${#strings.trim(cliente.nombresPersona)}|"><i class="bi bi-pencil" aria-hidden="true"></i><span>Editar</span></a>
 										<form class="d-inline" method="post" th:action="@{/modulos/clientes/{id}/eliminar(id=${cliente.idPersona})}" onsubmit="return confirm('¿Eliminar esta persona? No se eliminará si tiene relaciones con facturas, empleados o proveedores.')">
 											<button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash" aria-hidden="true"></i><span>Eliminar</span></button>
 										</form>
 									</td>
 								</tr>
-								<tr th:if="${#lists.isEmpty(clientes)}"><td class="empty-invoices" colspan="5">No hay personas que coincidan con la búsqueda.</td></tr>
+								<tr th:if="${#lists.isEmpty(clientes)}"><td class="empty-invoices" colspan="6">No hay personas que coincidan con la búsqueda.</td></tr>
 							</tbody>
 						</table>
 					</div>

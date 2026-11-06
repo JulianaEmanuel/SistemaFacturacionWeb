@@ -30,16 +30,18 @@ class FacturaServiceTest {
     @Mock ProductoRepository productos;
     @Mock EntityManager em;
     @Mock EmpleadoSesionService sesion;
+    @Mock FormaPagoRepository formasPago;@Mock FacturaPagoRepository pagos;@Mock FacturaClienteRepository historicos;@Mock PersonaContactosRepository contactos;@Mock FacturacionSchema schema;
     FacturaService service;
     Persona persona;
     @BeforeEach void setup() {
-        service=new FacturaService(facturas,detalles,personas,productos,em,sesion,new FacturaCalculoService());
+        service=new FacturaService(facturas,detalles,personas,productos,em,sesion,new FacturaCalculoService(),formasPago,pagos,historicos,contactos,schema);
         persona=new Persona();persona.setIdPersona(2L);persona.setNombresPersona("Ana   ");persona.setApellidosPersona("Paz  ");persona.setCedulaPersona("0912345678   ");
     }
     Empleado empleado() { var e=mock(Empleado.class);lenient().when(e.getIdEmpleado()).thenReturn(23L);lenient().when(e.getPersona()).thenReturn(persona);return e; }
-    FacturaForm form() { var f=new FacturaForm();f.setIdCliente(2L);f.setLineas(List.of(FacturaCalculoTest.linea(3,"1.25"),FacturaCalculoTest.linea(3,"0.75")));return f; }
+    FacturaForm form() { var f=new FacturaForm();f.setIdCliente(2L);f.setIdFormaPago(1);f.setLineas(List.of(FacturaCalculoTest.linea(3,"1.25"),FacturaCalculoTest.linea(3,"0.75")));return f; }
     Producto producto() { var p=new Producto();p.setIdProducto(3L);p.setNombreProducto("Arroz   ");p.setPrecioUnitario(new BigDecimal("10.1234"));p.setIvaProducto(new BigDecimal("15.00"));return p; }
     void contexto() {
+        var forma=mock(FormaPago.class);lenient().when(forma.isActiva()).thenReturn(true);lenient().when(forma.getId()).thenReturn(1);lenient().when(forma.getNombre()).thenReturn("Efectivo");lenient().when(em.find(FormaPago.class,1,LockModeType.PESSIMISTIC_READ)).thenReturn(forma);
         when(sesion.actual(true)).thenReturn(new EmpleadoSesionService.Cuenta(7L,false));doReturn(empleado()).when(sesion).empleado(7L,true);
     }
     void datos() { contexto();when(em.find(Persona.class,2L,LockModeType.PESSIMISTIC_READ)).thenReturn(persona);when(em.find(Producto.class,3L,LockModeType.PESSIMISTIC_READ)).thenReturn(producto()); }
@@ -87,6 +89,45 @@ class FacturaServiceTest {
         when(facturas.buscar(any(),anyString(),any(),any(),any())).thenReturn(Page.empty());
         service.listar(" Ana ",LocalDate.of(2026,1,1),LocalDate.of(2026,1,31),0);
         verify(facturas).buscar(eq(23L),eq("Ana"),eq(LocalDateTime.of(2026,1,1,0,0)),eq(LocalDateTime.of(2026,2,1,0,0)),eq(PageRequest.of(0,20)));
+    }
+    @Test void pagoCoincideConTotalYCopiaDeClienteNoCambiaAlEditarPersona() {
+        datos();guardarCabecera();persona.setDireccionPersona("Calle de prueba");persona.setCorreoPersona("cliente@example.invalid");
+        service.registrar(form());
+        var pago=ArgumentCaptor.forClass(FacturaPago.class);verify(pagos).saveAndFlush(pago.capture());
+        assertEquals(99L,pago.getValue().getIdFactura());assertEquals(new BigDecimal("23.2838"),pago.getValue().getImporte());assertEquals("Efectivo",pago.getValue().getNombre());
+        var copia=ArgumentCaptor.forClass(FacturaCliente.class);verify(historicos).saveAndFlush(copia.capture());
+        persona.setNombresPersona("Nombre cambiado");persona.setDireccionPersona("Otra dirección");
+        assertEquals("Ana",copia.getValue().getNombres());assertEquals("Calle de prueba",copia.getValue().getDireccion());
+    }
+    @Test void pagoInactivoONoExistenteNoPersisteLaFactura() {
+        contexto();when(em.find(Persona.class,2L,LockModeType.PESSIMISTIC_READ)).thenReturn(persona);
+        var inactiva=mock(FormaPago.class);when(em.find(FormaPago.class,1,LockModeType.PESSIMISTIC_READ)).thenReturn(inactiva);
+        assertThrows(FacturaException.class,()->service.registrar(form()));
+        when(em.find(FormaPago.class,1,LockModeType.PESSIMISTIC_READ)).thenReturn(null);
+        assertThrows(FacturaException.class,()->service.registrar(form()));verifyNoInteractions(facturas,detalles,pagos,historicos);
+    }
+    @Test void sinMigracionNoIntentaGuardarUnaFacturaParcial() {
+        when(sesion.actual(true)).thenReturn(new EmpleadoSesionService.Cuenta(7L,false));
+        doThrow(new FacturaException("Migración pendiente")).when(schema).exigirDisponible();
+        assertThrows(FacturaException.class,()->service.registrar(form()));verifyNoInteractions(facturas,detalles,pagos,historicos);
+    }
+    @Test void consultaPriorizaLaCopiaHistoricaSobreLaPersonaActual() {
+        persona.setDireccionPersona("Dirección original");var copia=new FacturaCliente(99L,persona);persona.setNombresPersona("Otro nombre");
+        when(schema.disponible()).thenReturn(true);when(historicos.findById(99L)).thenReturn(Optional.of(copia));
+        when(sesion.actual(false)).thenReturn(new EmpleadoSesionService.Cuenta(7L,true));when(facturas.completo(99L)).thenReturn(Optional.of(cabecera(empleado())));
+        var vista=service.consultar(99L);assertEquals("Ana Paz",vista.cliente());assertTrue(vista.contacto().historico());assertEquals("Dirección original",vista.contacto().direccion());
+        assertNull(vista.pago());verifyNoInteractions(personas);
+    }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings={"pago","cliente"})
+    void falloEnPagoOCopiaRevierteTodaLaTransaccion(String destino) {
+        datos();guardarCabecera();
+        if(destino.equals("pago"))doThrow(new IllegalStateException("Fallo simulado")).when(pagos).saveAndFlush(any());
+        else doThrow(new IllegalStateException("Fallo simulado")).when(historicos).saveAndFlush(any());
+        var commits=new java.util.concurrent.atomic.AtomicInteger();var rollbacks=new java.util.concurrent.atomic.AtomicInteger();
+        var tx=new AbstractPlatformTransactionManager(){protected Object doGetTransaction(){return new Object();}protected void doBegin(Object t,TransactionDefinition d){}protected void doCommit(DefaultTransactionStatus s){commits.incrementAndGet();}protected void doRollback(DefaultTransactionStatus s){rollbacks.incrementAndGet();}};
+        var factory=new ProxyFactory(service);factory.setProxyTargetClass(true);factory.addAdvice(new TransactionInterceptor(tx,new AnnotationTransactionAttributeSource()));
+        assertThrows(IllegalStateException.class,()->((FacturaService)factory.getProxy()).registrar(form()));assertEquals(0,commits.get());assertEquals(1,rollbacks.get());
     }
     @Test void adminPuedeListarTodasSinSerEmpleado() {
         when(sesion.actual(false)).thenReturn(new EmpleadoSesionService.Cuenta(7L,true));when(facturas.buscar(any(),anyString(),any(),any(),any())).thenReturn(Page.empty());

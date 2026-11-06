@@ -41,8 +41,9 @@ public class ReporteRepository {
     }
     public List<Fila> filas(ReporteTipo tipo,ReporteFiltro.Validado f) {
         String sql;
-        switch(tipo) {
-            case VENTAS -> {
+        // Comparaciones directas: evita la clase sintetica $1 de un switch de enum.
+        // Si el IDE y Maven recompilan en momentos distintos, esa clase puede faltar.
+        if(tipo==ReporteTipo.VENTAS) {
                 if(f.agrupacion().equals("factura")) sql="SELECT TOP (10001) CONVERT(varchar(20),f.ID_FACTURA) id,'Factura #'+CONVERT(varchar(20),f.ID_FACTURA) nombre,"
                     +"CONCAT(CONVERT(varchar(19),f.FECHA_FACTURA,120),' | ',"+CLIENTE+",' | ',"+NOMBRE_EMPLEADO+") referencia,"
                     +"CAST(1 AS bigint) facturas,CAST(NULL AS decimal(38,2)) cantidad,f.SUBTOTAL_FACTURA subtotal,f.TOTAL_FACTURA-f.SUBTOTAL_FACTURA iva,f.TOTAL_FACTURA total "
@@ -52,17 +53,16 @@ public class ReporteRepository {
                     sql="SELECT "+periodo+" id,"+periodo+" nombre,'' referencia,CAST(NULL AS decimal(38,2)) cantidad,"+IMPORTES+BASE+WHERE+"GROUP BY "+periodo+" ORDER BY id";
                 }
             }
-            case PRODUCTOS -> sql="SELECT TOP (:limite) CONVERT(varchar(20),d.ID_PRODUCTO) id,MAX(RTRIM(p.NOMBRE_PRODUCTO)) nombre,'' referencia,"
+        else if(tipo==ReporteTipo.PRODUCTOS) sql="SELECT TOP (:limite) CONVERT(varchar(20),d.ID_PRODUCTO) id,MAX(RTRIM(p.NOMBRE_PRODUCTO)) nombre,'' referencia,"
                 +"COUNT_BIG(DISTINCT f.ID_FACTURA) facturas,SUM(d.CANTIDAD) cantidad,SUM(d.SUBTOTAL_DETALLE) subtotal,SUM(d.TOTAL_DETALLE-d.SUBTOTAL_DETALLE) iva,SUM(d.TOTAL_DETALLE) total "
                 +BASE+" JOIN dbo.Detallefactura d ON d.ID_FACTURA=f.ID_FACTURA JOIN dbo.Producto p ON p.ID_PRODUCTO=d.ID_PRODUCTO "+WHERE
                 +"AND (:producto IS NULL OR d.ID_PRODUCTO=:producto) GROUP BY d.ID_PRODUCTO ORDER BY "+(f.orden().equals("importe")?"total":"cantidad")+" DESC,d.ID_PRODUCTO";
-            case EMPLEADOS -> sql="SELECT TOP (10001) CONVERT(varchar(20),f.ID_EMPLEADO) id,MAX("+NOMBRE_EMPLEADO+") nombre,'' referencia,CAST(NULL AS decimal(38,2)) cantidad,"
+        else if(tipo==ReporteTipo.EMPLEADOS) sql="SELECT TOP (10001) CONVERT(varchar(20),f.ID_EMPLEADO) id,MAX("+NOMBRE_EMPLEADO+") nombre,'' referencia,CAST(NULL AS decimal(38,2)) cantidad,"
                 +IMPORTES+BASE+EMPLEADO+WHERE+"GROUP BY f.ID_EMPLEADO ORDER BY total DESC,f.ID_EMPLEADO";
-            case CLIENTES -> sql="SELECT TOP (10001) CONVERT(varchar(20),f.ID_PERSONA) id,MAX("+CLIENTE+") nombre,COALESCE(MAX(RTRIM(c.CEDULA_PERSONA)),'No disponible') referencia,CAST(NULL AS decimal(38,2)) cantidad,"
+        else if(tipo==ReporteTipo.CLIENTES) sql="SELECT TOP (10001) CONVERT(varchar(20),f.ID_PERSONA) id,MAX("+CLIENTE+") nombre,COALESCE(MAX(RTRIM(c.CEDULA_PERSONA)),'No disponible') referencia,CAST(NULL AS decimal(38,2)) cantidad,"
                 +IMPORTES+BASE+WHERE+"GROUP BY f.ID_PERSONA ORDER BY total DESC,f.ID_PERSONA";
-            case RESUMEN -> { return List.of(); }
-            default -> throw new IllegalArgumentException("Tipo de reporte no válido.");
-        }
+        else if(tipo==ReporteTipo.RESUMEN) return List.of();
+        else throw new IllegalArgumentException("Tipo de reporte no válido.");
         return jdbc.query(sql,parametros(f),FILA);
     }
 }

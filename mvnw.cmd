@@ -44,6 +44,8 @@
 @SET __MVNW_ARG0_NAME__=
 @SET MVNW_USERNAME=
 @SET MVNW_PASSWORD=
+@REM Alias local de un solo argumento: spring-boot equivale a spring-boot:run.
+@IF NOT "%__MVNW_CMD__%"=="" IF "%~1"=="spring-boot" IF "%~2"=="" ("%__MVNW_CMD__%" spring-boot:run)
 @IF NOT "%__MVNW_CMD__%"=="" ("%__MVNW_CMD__%" %*)
 @echo Cannot start maven from wrapper >&2 && exit /b 1
 @GOTO :EOF

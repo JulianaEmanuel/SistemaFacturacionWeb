@@ -33,7 +33,11 @@ public class ReporteController {
         model.addAttribute("tipo",tipo);
         if(errors.hasErrors()) { model.addAttribute("errorMessage","Revisa las fechas y los identificadores del filtro.");return; }
         try {
-            var result=reportes.consultar(tipo,filtro);int paginas=Math.max(1,(result.filas().size()+24)/25);
+            ReporteResultado result;
+            if(tipo==ReporteTipo.RESUMEN) {
+                var panel=reportes.consultarPanel(filtro);result=panel.reporte();model.addAttribute("panel",panel);
+            } else result=reportes.consultar(tipo,filtro);
+            int paginas=Math.max(1,(result.filas().size()+24)/25);
             if(pagina<0 || pagina>=paginas) throw new ReporteException("Página no válida.");
             model.addAttribute("reporte",result);model.addAttribute("filasPagina",result.filas().subList(pagina*25,Math.min(result.filas().size(),(pagina+1)*25)));
             model.addAttribute("pagina",pagina);model.addAttribute("paginas",paginas);
@@ -57,16 +61,17 @@ public class ReporteController {
     @GetMapping("/{slug}/pdf")
     public ResponseEntity<byte[]> pdf(@PathVariable("slug") String reporte,@ModelAttribute("filtro") ReporteFiltro filtro,BindingResult errors) {
         ReporteTipo tipo=ReporteTipo.deRuta(reporte);validarBinding(errors);
-        return descarga(pdf.generar(tipo,filtro),"application/pdf",tipo,"pdf");
+        return archivo(pdf.generar(tipo,filtro),"application/pdf",tipo,"pdf",true);
     }
     @GetMapping("/{slug}/excel")
     public ResponseEntity<byte[]> excel(@PathVariable("slug") String reporte,@ModelAttribute("filtro") ReporteFiltro filtro,BindingResult errors) {
         ReporteTipo tipo=ReporteTipo.deRuta(reporte);validarBinding(errors);
-        return descarga(excel.generar(tipo,filtro),"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",tipo,"xlsx");
+        return archivo(excel.generar(tipo,filtro),"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",tipo,"xlsx",false);
     }
-    private ResponseEntity<byte[]> descarga(byte[] bytes,String mime,ReporteTipo tipo,String extension) {
+    private ResponseEntity<byte[]> archivo(byte[] bytes,String mime,ReporteTipo tipo,String extension,boolean vistaPrevia) {
+        var disposicion=vistaPrevia?ContentDisposition.inline():ContentDisposition.attachment();
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(mime)).cacheControl(CacheControl.noStore())
-            .header(HttpHeaders.CONTENT_DISPOSITION,ContentDisposition.attachment().filename("reporte-"+tipo.getSlug()+"."+extension).build().toString()).body(bytes);
+            .header(HttpHeaders.CONTENT_DISPOSITION,disposicion.filename("reporte-"+tipo.getSlug()+"."+extension).build().toString()).body(bytes);
     }
     @ExceptionHandler(NoSuchElementException.class) @ResponseStatus(HttpStatus.NOT_FOUND) @ResponseBody
     public String inexistente() { return "El reporte solicitado no está disponible."; }

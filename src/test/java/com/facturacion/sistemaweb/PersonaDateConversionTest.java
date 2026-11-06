@@ -29,7 +29,7 @@ class PersonaDateConversionTest {
 
 	@BeforeEach
 	void setUp() {
-		personaService = new PersonaService(personaRepository);
+		var contactos=org.mockito.Mockito.mock(com.facturacion.sistemaweb.repository.PersonaContactosRepository.class);org.mockito.Mockito.lenient().when(contactos.disponible()).thenReturn(true);personaService = new PersonaService(personaRepository,contactos);
 	}
 
 	@Test
@@ -44,7 +44,7 @@ class PersonaDateConversionTest {
 		PersonaForm form = new PersonaForm();
 		form.setCedulaPersona("0912345678");
 		form.setNombresPersona("Ana");
-		form.setApellidosPersona("Pérez");
+		form.setApellidosPersona("Pérez");form.setDireccionPersona("Calle de prueba");form.setCorreoPersona("cliente@example.invalid");
 		form.setFechaNacimientoPersona(LocalDate.of(2026, 10, 9));
 
 		Persona updated = personaService.actualizar(10L, form);
@@ -55,12 +55,12 @@ class PersonaDateConversionTest {
 	@Test
 	void registeringWithoutBirthDateKeepsSqlDateNullable() {
 		when(personaRepository.existeCedula("0912345678")).thenReturn(false);
-		when(personaRepository.save(any(Persona.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(personaRepository.saveAndFlush(any(Persona.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		PersonaForm form = new PersonaForm();
 		form.setCedulaPersona("0912345678");
 		form.setNombresPersona("Ana");
-		form.setApellidosPersona("Pérez");
+		form.setApellidosPersona("Pérez");form.setDireccionPersona("Calle de prueba");form.setCorreoPersona("cliente@example.invalid");
 
 		Persona created = personaService.registrar(form);
 

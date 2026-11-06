@@ -28,7 +28,7 @@ public class FacturaController {
     private final FacturaEnvios envios;
     public FacturaController(FacturaService facturas,FacturaRegistroService registro,FacturaEnvios envios) { this.facturas=facturas;this.registro=registro;this.envios=envios; }
     @InitBinder("facturaForm") void campos(WebDataBinder binder) {
-        binder.setAllowedFields("idCliente","token","lineas[*].idProducto","lineas[*].cantidad");binder.setAutoGrowCollectionLimit(200);
+        binder.setAllowedFields("idCliente","idFormaPago","token","lineas[*].idProducto","lineas[*].cantidad");binder.setAutoGrowCollectionLimit(200);
         binder.registerCustomEditor(java.math.BigDecimal.class,new FacturaCantidadEditor());
     }
     @GetMapping

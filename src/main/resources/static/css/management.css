@@ -47,3 +47,7 @@
  .dashboard-page .topbar .user-copy small {display:none;}
  .profile-summary {gap:16px;}
 }
+
+.factura-contacto-pago{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:24px;padding:22px;border:1px solid var(--line);border-radius:15px;margin:22px 0;background:var(--paper)}
+.factura-contacto-pago p,.factura-contacto-pago dd{overflow-wrap:anywhere}.factura-contacto-pago h3{font-weight:700;margin-bottom:15px}.factura-contacto-pago small{line-height:1.6}
+@media(max-width:767px){.factura-contacto-pago{grid-template-columns:minmax(0,1fr);padding:18px;gap:20px}}

@@ -97,3 +97,19 @@ siempre las consultas reales descritas arriba, no los datos de las capturas.
 Capturas locales y herramientas de prueba están en `target/ui-check/` (ignorados
 por Git). El registro Maven está en `target/portal-tests.log`. Playwright se
 instaló solo en target, sin añadir dependencias al producto.
+# Modo claro y oscuro
+
+El botón pequeño de luna/sol del encabezado permite alternar el tema en todos los
+módulos. También aparece en Login. La preferencia se guarda únicamente en el
+navegador (`sistemaweb.theme`) y se mantiene al navegar y recargar. Si todavía no
+hay una elección, se respeta el tema del sistema operativo. El botón sigue
+funcionando si el navegador bloquea el almacenamiento local.
+
+Los estilos están centralizados en `static/css/theme.css` y el comportamiento en
+`static/js/theme.js`; las plantillas utilizan el encabezado y el head compartidos.
+No cambia datos, autenticación ni permisos. La impresión mantiene fondo blanco y
+texto oscuro.
+
+Verificación: 42 pruebas JavaScript y 27 pruebas MVC aprobadas; revisión de 18
+escenarios en Edge (Login, Inicio, Clientes, Reportes y Perfil, a 320, 390 y 1440
+píxeles), con alternancia, persistencia y comprobación de impresión clara.

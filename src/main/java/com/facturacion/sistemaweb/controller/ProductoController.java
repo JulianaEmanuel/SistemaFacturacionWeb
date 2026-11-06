@@ -137,9 +137,14 @@ public class ProductoController {
 		ProductoForm form = new ProductoForm();
 		form.setIdProveedor(producto.getProveedor().getIdProveedor());
 		form.setNombreProducto(producto.getNombreProducto().stripTrailing());
-		form.setPrecioUnitario(producto.getPrecioUnitario());
-		form.setIvaProducto(producto.getIvaProducto());
+		form.setPrecioUnitario(numeroParaFormulario(producto.getPrecioUnitario()));
+		form.setIvaProducto(numeroParaFormulario(producto.getIvaProducto()));
 		return form;
+	}
+
+	private java.math.BigDecimal numeroParaFormulario(java.math.BigDecimal valor) {
+		var numero = valor.stripTrailingZeros();
+		return numero.setScale(Math.max(0, numero.scale()));
 	}
 
 	private List<Proveedor> cargarProveedores(Model model) {

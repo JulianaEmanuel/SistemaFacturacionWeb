@@ -30,6 +30,16 @@ public class Persona {
 	@Column(name = "FECHA_NACIMIENTO_PERSONA")
 	private LocalDateTime fechaNacimientoPersona;
 
+    // Persistidos por PersonaContactosRepository para conservar lectura del esquema anterior.
+    @jakarta.persistence.Transient private String direccionPersona;
+    @jakarta.persistence.Transient private String telefonoPersona;
+    @jakarta.persistence.Transient private String correoPersona;
+    public String getDireccionPersona(){return direccionPersona;}
+    public void setDireccionPersona(String v){direccionPersona=v;}
+    public String getTelefonoPersona(){return telefonoPersona;}
+    public void setTelefonoPersona(String v){telefonoPersona=v;}
+    public String getCorreoPersona(){return correoPersona;}
+    public void setCorreoPersona(String v){correoPersona=v;}
 	public Persona() {
 	}
 

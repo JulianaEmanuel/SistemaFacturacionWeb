@@ -17,7 +17,7 @@ import com.facturacion.sistemaweb.service.*;
 class FacturaMethodSecurityTest {
     @Configuration @EnableMethodSecurity static class Config {
         @Bean EmpleadoSesionService sesion() { return mock(EmpleadoSesionService.class); }
-        @Bean FacturaService facturas(EmpleadoSesionService sesion) { return new FacturaService(mock(FacturaRepository.class),mock(DetalleFacturaRepository.class),mock(PersonaRepository.class),mock(ProductoRepository.class),mock(EntityManager.class),sesion,new FacturaCalculoService()); }
+        @Bean FacturaService facturas(EmpleadoSesionService sesion) { return new FacturaService(mock(FacturaRepository.class),mock(DetalleFacturaRepository.class),mock(PersonaRepository.class),mock(ProductoRepository.class),mock(EntityManager.class),sesion,new FacturaCalculoService(),mock(FormaPagoRepository.class),mock(FacturaPagoRepository.class),mock(FacturaClienteRepository.class),mock(PersonaContactosRepository.class),mock(FacturacionSchema.class)); }
         @Bean FacturaRegistroService registro(FacturaService facturas) { return new FacturaRegistroService(facturas,new FacturaEnvios()); }
     }
     @Autowired FacturaService facturas;

@@ -65,14 +65,14 @@ class FacturaControllerTest {
     }
     @Test void registraConMocksIgnorandoPreciosEmpleadoYTotalesInyectados() throws Exception {
         when(registro.registrar(any(),any())).thenReturn(99L);
-        mvc.perform(post("/modulos/facturas").with(user("ana")).with(csrf()).param("token","simulado").param("idCliente","2")
+        mvc.perform(post("/modulos/facturas").with(user("ana")).with(csrf()).param("token","simulado").param("idFormaPago","1").param("idCliente","2")
                 .param("lineas[0].idProducto","3").param("lineas[0].cantidad","1.25").param("idEmpleado","999").param("total","0.01").param("lineas[0].precio","0.01"))
             .andExpect(redirectedUrl("/modulos/facturas/99")).andExpect(flash().attribute("successMessage","Factura registrada correctamente."));
         verify(registro).registrar(any(),argThat(f -> f.getIdCliente()==2L && f.getLineas().size()==1 && f.getLineas().getFirst().getCantidad().equals(new BigDecimal("1.25"))));
     }
     @Test void cantidadesInvalidasNoLleganAlRegistro() throws Exception {
         when(service.formulario()).thenReturn(datos(null));
-        for(String cantidad:List.of("0","-1","0.001","1000000","1,000","1.000,02","1,000.02","1e2")) mvc.perform(post("/modulos/facturas").with(user("ana")).with(csrf()).param("token","simulado").param("idCliente","2")
+        for(String cantidad:List.of("0","-1","0.001","1000000","1,000","1.000,02","1,000.02","1e2")) mvc.perform(post("/modulos/facturas").with(user("ana")).with(csrf()).param("token","simulado").param("idFormaPago","1").param("idCliente","2")
                 .param("lineas[0].idProducto","3").param("lineas[0].cantidad",cantidad))
             .andExpect(status().isOk()).andExpect(model().attributeHasFieldErrors("facturaForm","lineas[0].cantidad"));
         verifyNoInteractions(registro);
@@ -81,14 +81,14 @@ class FacturaControllerTest {
     @org.junit.jupiter.params.provider.ValueSource(strings={"1","2","3","1.02","1,02","999999,99"})
     void cantidadesConComaOPuntoSeInterpretanComoDecimales(String cantidad) throws Exception {
         when(registro.registrar(any(),any())).thenReturn(99L);
-        mvc.perform(post("/modulos/facturas").with(user("ana")).with(csrf()).param("token","simulado").param("idCliente","2")
+        mvc.perform(post("/modulos/facturas").with(user("ana")).with(csrf()).param("token","simulado").param("idFormaPago","1").param("idCliente","2")
                 .param("lineas[0].idProducto","3").param("lineas[0].cantidad",cantidad))
             .andExpect(redirectedUrl("/modulos/facturas/99"));
         verify(registro).registrar(any(),argThat(f -> f.getLineas().getFirst().getCantidad().equals(new BigDecimal(cantidad.replace(',','.')))));
     }
     @Test void tokenInvalidoMuestraErrorSinRegistrar() throws Exception {
         when(service.formulario()).thenReturn(datos(null));when(registro.registrar(any(),any())).thenThrow(new FacturaException("El formulario no es válido."));
-        mvc.perform(post("/modulos/facturas").with(user("ana")).with(csrf()).param("token","forjado").param("idCliente","2").param("lineas[0].idProducto","3").param("lineas[0].cantidad","1"))
+        mvc.perform(post("/modulos/facturas").with(user("ana")).with(csrf()).param("token","forjado").param("idFormaPago","1").param("idCliente","2").param("lineas[0].idProducto","3").param("lineas[0].cantidad","1"))
             .andExpect(status().isOk()).andExpect(content().string(containsString("El formulario no es válido.")));
     }
     @Test void detalleHistoricoConImpresionYSinEdicion() throws Exception {

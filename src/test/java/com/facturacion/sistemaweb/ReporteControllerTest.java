@@ -35,6 +35,20 @@ class ReporteControllerTest {
     @MockitoBean UserDetailsService users;
     void datos() {
         when(reportes.consultar(any(),any())).thenAnswer(i -> ReporteExportTest.resultado(i.getArgument(0),List.of(ReporteExportTest.fila("2","José Cliente","0012345678","4.6000"))));
+        when(reportes.consultarPanel(any())).thenAnswer(i -> {
+            var filas=List.of(ReporteExportTest.fila("2","José Cliente","0012345678","4.6000"));
+            return new ReportePanel(ReporteExportTest.resultado(ReporteTipo.RESUMEN,filas),filas,filas,filas,1);
+        });
+    }
+    @Test void resumenIncluyeCuatroGraficasYDatosDetalladosAutorizados() throws Exception {
+        datos();mvc.perform(get("/modulos/reportes").with(user("ana")))
+            .andExpect(status().isOk()).andExpect(content().string(containsString("Evolución de ventas")))
+            .andExpect(content().string(containsString("Ventas por cliente")))
+            .andExpect(content().string(containsString("Productos más vendidos")))
+            .andExpect(content().string(containsString("Subtotal e IVA")))
+            .andExpect(content().string(containsString("Ver datos detallados")))
+            .andExpect(content().string(containsString("/js/reportes-panel.js")));
+        verify(reportes).consultarPanel(any());
     }
     @Test void anonimoNoConsultaNiDescarga() throws Exception {
         for(String path:List.of("/modulos/reportes","/modulos/reportes/ventas","/modulos/reportes/ventas/pdf","/modulos/reportes/clientes/excel","/modulos/reportes/empleados/imprimir"))
@@ -70,8 +84,10 @@ class ReporteControllerTest {
     @Test void pdfYExcelUsanMimesYNombreDeArchivoSeguro() throws Exception {
         when(pdf.generar(any(),any())).thenReturn(new byte[]{1,2});when(excel.generar(any(),any())).thenReturn(new byte[]{3,4});
         mvc.perform(get("/modulos/reportes/ventas/pdf").with(user("ana"))).andExpect(status().isOk()).andExpect(content().contentType("application/pdf"))
-            .andExpect(header().string("Content-Disposition",containsString("reporte-ventas.pdf"))).andExpect(header().string("Cache-Control",containsString("no-store")));
-        mvc.perform(get("/modulos/reportes/clientes/excel").with(user("ana"))).andExpect(status().isOk()).andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            .andExpect(header().string("Content-Disposition","inline; filename=\"reporte-ventas.pdf\""))
+            .andExpect(header().string("Cache-Control",containsString("no-store")));
+        mvc.perform(get("/modulos/reportes/clientes/excel").with(user("ana"))).andExpect(status().isOk()).andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .andExpect(header().string("Content-Disposition","attachment; filename=\"reporte-clientes.xlsx\""));
     }
     @Test void impresionNoIncluyeMenuNiGraficosDeOtrosDatos() throws Exception {
         datos();mvc.perform(get("/modulos/reportes/clientes/imprimir").with(user("ana"))).andExpect(status().isOk()).andExpect(view().name("reportes/imprimible"))

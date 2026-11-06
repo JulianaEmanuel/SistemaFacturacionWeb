@@ -2,6 +2,7 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head('Iniciar sesión | Sistema de Facturación Web')}"></head>
 <body class="login-page">
+<button class="theme-toggle login-theme-toggle" type="button" data-theme-toggle hidden aria-label="Activar modo oscuro" aria-pressed="false" title="Activar modo oscuro"><i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i></button>
 <main class="login-stage">
     <div class="login-orb orb-one" aria-hidden="true"></div><div class="login-orb orb-two" aria-hidden="true"></div><div class="login-grid" aria-hidden="true"></div>
     <a class="login-brand" th:href="@{/login}" aria-label="Sistema de Facturación Web">

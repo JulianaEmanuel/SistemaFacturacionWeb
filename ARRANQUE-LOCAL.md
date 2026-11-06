@@ -88,3 +88,19 @@ Después se cerró únicamente esa instancia de prueba.
 Desde otra sesión limpia, `.\mvnw.cmd test` aprobó las 274 pruebas Java. También
 pasaron las 25 pruebas JavaScript. No se cambiaron datos ni contraseñas reales.
 Registros locales: `target/arranque-local.log` y `target/arranque-local-tests.log`.
+
+## Error de compilación al abrir Reportes
+
+Si aparece `NoClassDefFoundError: ReporteRepository$1`, la clase principal compilada
+está intentando usar un auxiliar del `switch` que falta en la salida de compilación.
+No es un error de las facturas almacenadas. Se confirmó esa inconsistencia en
+`target/classes`: existía `ReporteRepository.class`, pero faltaba su auxiliar.
+
+La selección de consultas de Reportes ahora utiliza comparaciones directas del
+tipo de reporte, sin generar ese auxiliar. `ReporteCompilacionTest` simula su
+ausencia para verificar los cinco tipos sin escribir en SQL Server. Las consultas,
+los cálculos y los permisos se conservan.
+
+Después de actualizar el código, detener la aplicación con Ctrl+C en su terminal
+y volver a ejecutar `.\mvnw.cmd spring-boot:run`; Maven recompilará el repositorio.
+No se deben borrar archivos `.class` mientras la aplicación está en ejecución.

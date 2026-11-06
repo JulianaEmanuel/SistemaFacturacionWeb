@@ -30,7 +30,7 @@ class PersonaServiceDuplicateCedulaTest {
 
 	@BeforeEach
 	void setUp() {
-		personaService = new PersonaService(personaRepository);
+		personaService = new PersonaService(personaRepository,org.mockito.Mockito.mock(com.facturacion.sistemaweb.repository.PersonaContactosRepository.class));
 	}
 
 	@Test

@@ -147,3 +147,33 @@ Si ya está ocupada la puerta 8080, añadir `--server.port=8081` para comprobar 
 JAR nuevo sin detener la instancia anterior. Iniciar sesión con una cuenta
 existente y abrir `http://localhost:8081/modulos/reportes` (o 8080 si se usa esa
 puerta). Este procedimiento no crea cuentas ni contraseñas.
+# Panel gráfico del resumen
+
+Las rutas `/modulos/reportes` y `/modulos/reportes/resumen` muestran cuatro
+gráficas con datos reales del período y alcance autorizado:
+
+- Ventas por día o mes, con los períodos sin ventas representados como cero.
+- Hasta diez clientes con mayor total facturado, más el número de clientes
+  facturados del período completo.
+- Hasta diez productos más vendidos por cantidad, usando el precio y el IVA
+  históricos del detalle para sus importes.
+- Composición del total facturado: subtotal e IVA.
+
+Las gráficas de ventas, clientes y productos incluyen tablas desplegables con los
+datos detallados. Las fechas, búsqueda de cliente y alcance del empleado se
+resuelven en el servicio. Todas las consultas del panel comparten una transacción
+de solo lectura; un empleado ve sus propias ventas y un administrador conserva el
+alcance autorizado del sistema. No se insertan ni modifican facturas.
+
+Por defecto se conserva el período habitual del sistema, desde el inicio del mes
+actual hasta hoy. Para consultar facturas anteriores hay que elegir sus fechas.
+Sin movimientos se muestran avisos, sin generar cifras ficticias. Los rankings
+son parciales; los indicadores monetarios corresponden a todo el período filtrado.
+
+El panel utiliza Chart.js local, admite modo claro/oscuro y movimiento reducido,
+y mantiene tablas disponibles si la biblioteca gráfica no carga. Las opciones de
+PDF y Excel conservan sus exportaciones del resumen monetario.
+
+Archivos principales: `ReportePanel.java`, `ReporteService.consultarPanel`,
+`templates/reportes/panel.html`, `static/js/reportes-panel.js` y los estilos
+compartidos de `static/css/reportes.css`.

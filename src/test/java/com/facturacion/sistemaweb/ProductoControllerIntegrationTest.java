@@ -70,7 +70,7 @@ class ProductoControllerIntegrationTest {
 				.andExpect(status().isOk())
 				.andExpect(view().name("productos/formulario"))
 				.andExpect(content().string(containsString("Nombre real proveedor")))
-				.andExpect(content().string(containsString("IVA almacenado")));
+				.andExpect(content().string(containsString("IVA (%)")));
 	}
 
 	@Test

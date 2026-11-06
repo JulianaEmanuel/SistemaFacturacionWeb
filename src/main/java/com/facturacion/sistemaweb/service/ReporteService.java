@@ -49,6 +49,25 @@ public class ReporteService {
         String clase=tipo==ReporteTipo.VENTAS && filtro.agrupacion().equals("dia")?"line":"bar";
         return new ReporteResultado(tipo,filtro,alcance,cuenta.administrador(),resumen,filas,grafico,clase,tipo==ReporteTipo.PRODUCTOS);
     }
+    public ReportePanel consultarPanel(ReporteFiltro input) {
+        // Resuelve identidad, permisos y filtros en el servicio antes de cualquier serie.
+        // Todos los SELECT del panel comparten esta transaccion de solo lectura.
+        var reporte=consultar(ReporteTipo.RESUMEN,input);
+        if(reporte.sinVentas()) return new ReportePanel(reporte,List.of(),List.of(),List.of(),0);
+        var f=reporte.filtro();
+        var periodos=new ReporteFiltro.Validado(f.desde(),f.hasta(),f.cliente(),f.producto(),f.empleado(),
+            f.agrupacion().equals("mes")?"mes":"dia","cantidad",f.q(),10);
+        var ranking=new ReporteFiltro.Validado(f.desde(),f.hasta(),f.cliente(),f.producto(),f.empleado(),
+            "dia","cantidad",f.q(),10);
+        var ventas=repository.filas(ReporteTipo.VENTAS,periodos);
+        var clientes=repository.filas(ReporteTipo.CLIENTES,ranking);
+        var productos=repository.filas(ReporteTipo.PRODUCTOS,ranking);
+        exigirLimite(ventas.size());exigirLimite(clientes.size());exigirLimite(productos.size());
+        return new ReportePanel(reporte,completarPeriodos(ventas,periodos),clientes.stream()
+            .sorted(Comparator.comparing(Fila::total).reversed().thenComparing(Fila::id)).limit(10).toList(),
+            productos,clientes.size());
+    }
+
     private ReporteFiltro.Validado validar(ReporteFiltro f) {
         LocalDate hoy=LocalDate.now(clock),desde=f.getDesde()==null?hoy.withDayOfMonth(1):f.getDesde(),hasta=f.getHasta()==null?hoy:f.getHasta();
         LocalDate min=LocalDate.of(1753,1,1),max=LocalDate.of(9999,12,30);

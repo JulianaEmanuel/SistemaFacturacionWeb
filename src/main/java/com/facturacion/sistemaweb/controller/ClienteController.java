@@ -49,13 +49,17 @@ public class ClienteController {
 	}
 
 	@PostMapping
-	public String registrar(@Valid @ModelAttribute("personaForm") PersonaForm form,
+	public String registrar(@org.springframework.validation.annotation.Validated(PersonaForm.Nuevo.class) @ModelAttribute("personaForm") PersonaForm form,
 			BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
 		if (bindingResult.hasErrors()) {
 			prepararFormulario(model, form, false, null);
 			return "clientes/formulario";
 		}
 
+        if(!personaService.contactosDisponibles()) {
+            model.addAttribute("errorMessage","Falta aplicar la migración de contactos. No se guardaron datos.");
+            prepararFormulario(model,form,false,null);return "clientes/formulario";
+        }
 		try {
 			personaService.registrar(form);
 		} catch (CedulaDuplicadaException exception) {
@@ -72,6 +76,7 @@ public class ClienteController {
 		Persona persona = buscarPersona(idPersona);
 		PersonaForm form = new PersonaForm();
 		form.setCedulaPersona(persona.getCedulaPersona().stripTrailing());
+        form.setDireccionPersona(persona.getDireccionPersona());form.setTelefonoPersona(persona.getTelefonoPersona());form.setCorreoPersona(persona.getCorreoPersona());
 		form.setNombresPersona(persona.getNombresPersona().stripTrailing());
 		form.setApellidosPersona(persona.getApellidosPersona().stripTrailing());
 		form.setFechaNacimientoPersona(persona.getFechaNacimientoPersona() == null
@@ -123,6 +128,7 @@ public class ClienteController {
 
 	private void prepararFormulario(Model model, PersonaForm form, boolean modoEdicion, Long idPersona) {
 		model.addAttribute("personaForm", form);
+        model.addAttribute("contactosDisponibles",personaService.contactosDisponibles());
 		model.addAttribute("modoEdicion", modoEdicion);
 		model.addAttribute("personaId", idPersona);
 		model.addAttribute("formAction", modoEdicion

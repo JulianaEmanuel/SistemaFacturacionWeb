@@ -23,8 +23,11 @@ public class FacturaService {
     private final EntityManager em;
     private final EmpleadoSesionService sesion;
     private final FacturaCalculoService calculo;
+    private final FormaPagoRepository formasPago;private final FacturaPagoRepository pagos;private final FacturaClienteRepository historicos;
+    private final PersonaContactosRepository contactos;private final FacturacionSchema schema;
     public FacturaService(FacturaRepository facturas,DetalleFacturaRepository detalles,PersonaRepository personas,
-            ProductoRepository productos,EntityManager em,EmpleadoSesionService sesion,FacturaCalculoService calculo) {
+            ProductoRepository productos,EntityManager em,EmpleadoSesionService sesion,FacturaCalculoService calculo,FormaPagoRepository formasPago,FacturaPagoRepository pagos,FacturaClienteRepository historicos,PersonaContactosRepository contactos,FacturacionSchema schema) {
+        this.formasPago=formasPago;this.pagos=pagos;this.historicos=historicos;this.contactos=contactos;this.schema=schema;
         this.facturas=facturas;this.detalles=detalles;this.personas=personas;this.productos=productos;this.em=em;this.sesion=sesion;this.calculo=calculo;
     }
     public Long usuarioId() { return sesion.actual(false).id(); }
@@ -33,9 +36,13 @@ public class FacturaService {
         var cuenta=sesion.actual(false);String empleado=null,impedimento=null;
         try { empleado=nombre(sesion.empleado(cuenta.id(),false).getPersona()); }
         catch(FacturaException ex) { impedimento=ex.getMessage(); }
+        var clientes=personas.listarOrdenadas();contactos.cargar(clientes);
+        var metodos=schema.disponible()?formasPago.findByActivaTrueOrderByNombreAsc().stream().map(f->new FacturaVista.FormaPagoOpcion(f.getId(),f.getNombre())).toList():List.<FacturaVista.FormaPagoOpcion>of();
+        if(!schema.disponible()) impedimento="Registro pendiente de migraciones autorizadas de contactos y pagos. Las facturas anteriores siguen disponibles.";
+        else if(metodos.isEmpty()) impedimento="No hay formas de pago activas. Revisa el catálogo interno.";
         return new FacturaVista.Formulario(cuenta.id(),empleado,impedimento,
-            personas.listarOrdenadas().stream().map(p -> new FacturaVista.ClienteOpcion(p.getIdPersona(),p.getCedulaPersona().stripTrailing(),nombre(p))).toList(),
-            productos.listarOrdenados().stream().map(p -> new FacturaVista.ProductoOpcion(p.getIdProducto(),p.getNombreProducto().stripTrailing(),p.getPrecioUnitario(),p.getIvaProducto())).toList());
+            clientes.stream().map(p -> new FacturaVista.ClienteOpcion(p.getIdPersona(),p.getCedulaPersona().stripTrailing(),nombre(p),p.getDireccionPersona(),p.getTelefonoPersona(),p.getCorreoPersona())).toList(),
+            productos.listarOrdenados().stream().map(p -> new FacturaVista.ProductoOpcion(p.getIdProducto(),p.getNombreProducto().stripTrailing(),p.getPrecioUnitario(),p.getIvaProducto())).toList(),metodos,schema.disponible());
     }
     public Page<FacturaVista> listar(String q,LocalDate desde,LocalDate hasta,int pagina) {
         var cuenta=sesion.actual(false);
@@ -59,19 +66,27 @@ public class FacturaService {
         return vista(factura,lineas);
     }
     private FacturaVista vista(Factura f,List<FacturaVista.Linea> lineas) {
-        Persona cliente=personas.findById(f.getIdPersona()).orElse(null);
-        return new FacturaVista(f.getIdFactura(),f.getFecha(),cliente==null?"—":cliente.getCedulaPersona().stripTrailing(),
-            cliente==null?"Cliente no disponible (ID "+f.getIdPersona()+")":nombre(cliente),nombre(f.getEmpleado().getPersona()),
-            f.getSubtotal(),f.getTotal().subtract(f.getSubtotal()),f.getTotal(),lineas);
+        FacturaCliente historico=schema.disponible()?historicos.findById(f.getIdFactura()).orElse(null):null;
+        FacturaPago pago=schema.disponible()?pagos.findByIdFactura(f.getIdFactura()).orElse(null):null;
+        Persona cliente=historico==null?personas.findById(f.getIdPersona()).orElse(null):null;
+        return new FacturaVista(f.getIdFactura(),f.getFecha(),historico!=null?historico.getIdentificacion():cliente==null?"—":cliente.getCedulaPersona().stripTrailing(),
+            historico!=null?historico.getNombres()+" "+historico.getApellidos():cliente==null?"Cliente no disponible (ID "+f.getIdPersona()+")":nombre(cliente),nombre(f.getEmpleado().getPersona()),
+            f.getSubtotal(),f.getTotal().subtract(f.getSubtotal()),f.getTotal(),lineas,
+            historico==null?new FacturaVista.Contacto(null,null,null,false):new FacturaVista.Contacto(historico.getDireccion(),historico.getTelefono(),historico.getCorreo(),true),
+            pago==null?null:new FacturaVista.Pago(pago.getNombre(),pago.getImporte()));
     }
     @Transactional(isolation=Isolation.SERIALIZABLE)
     public Long registrar(FacturaForm form) {
-        var cuenta=sesion.actual(true);
+        var cuenta=sesion.actual(true);schema.exigirDisponible();
         Empleado empleado=sesion.empleado(cuenta.id(),true);
         if(form.getIdCliente()==null || form.getIdCliente()<1) throw new FacturaException("Selecciona un cliente válido.");
         Persona cliente=em.find(Persona.class,form.getIdCliente(),LockModeType.PESSIMISTIC_READ);
         if(cliente==null) throw new FacturaException("El cliente seleccionado ya no existe.");
         var cantidades=calculo.acumular(form.getLineas());
+        if(form.getIdFormaPago()==null || form.getIdFormaPago()<1) throw new FacturaException("Selecciona una forma de pago válida.");
+        FormaPago forma=em.find(FormaPago.class,form.getIdFormaPago(),LockModeType.PESSIMISTIC_READ);
+        if(forma==null || !forma.isActiva()) throw new FacturaException("La forma de pago ya no existe o está inactiva.");
+        contactos.cargar(cliente);
         List<DetalleFactura> lineas=new ArrayList<>();
         BigDecimal subtotal=new BigDecimal("0.0000"),total=new BigDecimal("0.0000");
         for(var entry:cantidades.entrySet()) {
@@ -87,6 +102,8 @@ public class FacturaService {
         factura=facturas.saveAndFlush(factura);
         for(var linea:lineas) linea.setFactura(factura);
         detalles.saveAllAndFlush(lineas);
+        pagos.saveAndFlush(new FacturaPago(factura.getIdFactura(),forma,total));
+        historicos.saveAndFlush(new FacturaCliente(factura.getIdFactura(),cliente));
         return factura.getIdFactura();
     }
 }
